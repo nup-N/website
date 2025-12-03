@@ -1,0 +1,50 @@
+version: '3.8'
+
+# 服务定义
+services:
+  # PostgreSQL 15 数据库服务
+  postgres_auth:
+    container_name: postgres_auth
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=auth_system
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    restart: always  # 自动重启策略
+    healthcheck:     # 健康检查配置
+      test: ["CMD-SHELL", "pg_isready -U admin -d auth_system"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - app_network
+
+  # Redis 7 缓存服务
+  redis_auth:
+    container_name: redis_auth
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    command: redis-server --appendonly yes  # 启用 AOF 持久化
+    restart: always  # 自动重启策略
+    healthcheck:     # 健康检查配置
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app_network
+
+# 网络配置
+networks:
+  app_network:
+    driver: bridge
