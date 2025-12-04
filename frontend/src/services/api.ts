@@ -1,7 +1,7 @@
 ﻿import axios from 'axios';
 import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../types';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = '/api';
 
 // 创建 axios 实例
 const apiClient = axios.create({

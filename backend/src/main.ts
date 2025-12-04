@@ -11,6 +11,9 @@ async function bootstrap() {
     credentials: true,
   });
   
+  // 全局路由前缀
+  app.setGlobalPrefix('api');
+
   // 全局验证管道
   app.useGlobalPipes(new ValidationPipe());
   
