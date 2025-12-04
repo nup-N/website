@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+﻿import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 
@@ -14,7 +14,8 @@ async function bootstrap() {
   // 全局验证管道
   app.useGlobalPipes(new ValidationPipe());
   
-  await app.listen(3000);
-  console.log('Application is running on: http://localhost:3000');
+  // 监听所有网络接口
+  await app.listen(3000, '0.0.0.0');
+  console.log('Application is running on: http://0.0.0.0:3000');
 }
 bootstrap();
