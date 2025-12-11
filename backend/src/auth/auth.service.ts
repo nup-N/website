@@ -68,4 +68,22 @@ export class AuthService {
       user,
     };
   }
+
+  /**
+   * 验证 Token（新增方法）👈
+   * 
+   * 验证 JWT Token 是否有效（供其他系统调用）
+   * 
+   * @param token JWT Token
+   * @returns 解码后的用户信息
+   * @throws UnauthorizedException 当 Token 无效或已过期时
+   */
+  async verifyToken(token: string): Promise<any> {
+    try {
+      const decoded = this.jwtService.verify(token);
+      return decoded;
+    } catch (error) {
+      throw new UnauthorizedException('Token 无效或已过期');
+    }
+  }
 }

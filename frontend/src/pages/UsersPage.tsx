@@ -14,7 +14,7 @@ const UsersPage: React.FC = () => {
 
   // 检查登录状态并获取用户数据
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     
     // 如果没有 token，跳转到登录页面
     if (!token) {
@@ -33,7 +33,7 @@ const UsersPage: React.FC = () => {
         
         // 如果是认证错误，可能是 token 过期，跳转到登录页
         if (axios.isAxiosError(err) && err.response?.status === 401) {
-          localStorage.removeItem('token');
+          localStorage.removeItem('access_token');
           navigate('/login');
         }
       } finally {
@@ -46,7 +46,7 @@ const UsersPage: React.FC = () => {
 
   // 处理退出登录
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     navigate('/login');
   };
 

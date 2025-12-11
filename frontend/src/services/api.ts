@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import type { LoginRequest, RegisterRequest, AuthResponse, User } from '../types';
 
 const API_BASE_URL = '/api';
@@ -14,7 +14,7 @@ const apiClient = axios.create({
 // 请求拦截器：自动添加 Token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token 过期或无效，清除并跳转到登录页
-      localStorage.removeItem('token');
+      localStorage.removeItem('access_token');
       window.location.href = '/login';
     }
     return Promise.reject(error);

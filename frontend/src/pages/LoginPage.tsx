@@ -43,11 +43,11 @@ const LoginPage: React.FC = () => {
       console.log('登录响应数据:', response);
       
       // 修复：使用正确的字段名 access_token 而不是 token
-      localStorage.setItem('token', response.access_token);
+      localStorage.setItem('access_token', response.access_token);
       
       // 添加调试信息，确认 token 已保存
       console.log('Token 保存状态:', '已保存');
-      console.log('localStorage 中的 token:', localStorage.getItem('token'));
+      console.log('localStorage 中的 access_token:', localStorage.getItem('access_token'));
       
       // 确保先保存 Token 再跳转
       setTimeout(() => {
