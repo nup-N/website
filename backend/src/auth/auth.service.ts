@@ -53,10 +53,11 @@ export class AuthService {
       throw new UnauthorizedException('用户名或密码不正确');
     }
     
-    // 创建JWT载荷
+    // 创建JWT载荷（包含用户角色信息）
     const payload = {
       sub: user.id,
       username: user.username,
+      role: user.role || 'user', // 包含用户角色
     };
     
     // 生成JWT访问令牌

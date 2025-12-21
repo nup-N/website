@@ -39,13 +39,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    * 返回的对象将被添加到请求对象中，可通过req.user访问
    * 
    * @param payload JWT令牌的载荷部分
-   * @returns 包含用户ID和用户名的对象
+   * @returns 包含用户ID、用户名和角色的对象
    */
-  async validate(payload: { sub: number; username: string }): Promise<{ userId: number; username: string }> {
-    // 从JWT载荷中提取用户信息
+  async validate(payload: { sub: number; username: string; role?: string }): Promise<{ userId: number; username: string; role?: string }> {
+    // 从JWT载荷中提取用户信息（包含角色）
     return {
       userId: payload.sub,
       username: payload.username,
+      role: payload.role, // 包含用户角色
     };
   }
 }
