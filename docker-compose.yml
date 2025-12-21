@@ -1,23 +1,24 @@
 version: '3.8'
 
 # 服务定义
+# 注意：敏感信息（如密码）应通过 .env 文件配置，不要硬编码
 services:
   # PostgreSQL 15 数据库服务
   postgres_auth:
     container_name: postgres_auth
     image: postgres:15
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      - POSTGRES_DB=auth_system
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin123
+      - POSTGRES_DB=${POSTGRES_DB:-auth_system}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - PGDATA=/var/lib/postgresql/data
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
-    restart: always  # 自动重启策略
-    healthcheck:     # 健康检查配置
-      test: ["CMD-SHELL", "pg_isready -U admin -d auth_system"]
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-auth_system}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,12 +31,18 @@ services:
     container_name: redis_auth
     image: redis:7
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - ./data/redis:/data
-    command: redis-server --appendonly yes  # 启用 AOF 持久化
-    restart: always  # 自动重启策略
-    healthcheck:     # 健康检查配置
+    command: >
+      sh -c "
+      if [ -n \"$$REDIS_PASSWORD\" ]; then
+        redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\"
+      else
+        redis-server --appendonly yes
+      fi
+    restart: always
+    healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
