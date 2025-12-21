@@ -1,0 +1,60 @@
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .navigation-right-section .right-content {
+    flex-direction: column !important;
+    gap: 30px !important;
+  }
+  
+  .navigation-right-section .links-section {
+    flex: none !important;
+    width: 100% !important;
+  }
+  
+  .navigation-right-section .signature-section {
+    padding-left: 0 !important;
+    border-left: none !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding-top: 30px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .navigation-container {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 30px !important;
+  }
+  
+  .navigation-left-section {
+    flex: none !important;
+    width: 100% !important;
+    padding-right: 0 !important;
+  }
+  
+  .navigation-avatar-container {
+    width: 120px !important;
+    height: 120px !important;
+  }
+  
+  .navigation-right-section {
+    padding-left: 0 !important;
+  }
+  
+  /* 隐藏分隔线 */
+  .navigation-container > div[style*="divider"] {
+    display: none !important;
+  }
+}
+
+/* 链接项悬停效果 */
+.link-item:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #3b82f6 !important;
+  transform: translateX(4px);
+}
+
+.link-item:hover .link-arrow {
+  transform: translateX(4px);
+  color: #3b82f6 !important;
+}
+

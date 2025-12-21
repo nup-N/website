@@ -141,8 +141,7 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.formContainer}>
-        <h1 style={styles.title}>注册账号</h1>
+      <h1 style={styles.title}>注册账号</h1>
         
         {error && <div style={styles.errorMessage}>{error}</div>}
         
@@ -236,7 +235,6 @@ const RegisterPage: React.FC = () => {
             </Link>
           </div>
         </form>
-      </div>
     </div>
   );
 };
@@ -244,25 +242,16 @@ const RegisterPage: React.FC = () => {
 // 内联样式
 const styles = {
   container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#f5f5f5',
-    padding: '20px',
-  },
-  formContainer: {
     width: '100%',
-    maxWidth: '450px',
-    backgroundColor: '#ffffff',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-    padding: '30px',
+    maxWidth: '500px',
+    margin: '0 auto',
   },
   title: {
     textAlign: 'center' as const,
-    marginBottom: '24px',
-    color: '#333333',
+    marginBottom: '32px',
+    color: '#1f2937',
+    fontSize: '32px',
+    fontWeight: 'bold' as const,
   },
   form: {
     display: 'flex',
@@ -281,25 +270,27 @@ const styles = {
   },
   input: {
     padding: '12px 16px',
-    borderRadius: '4px',
-    border: '1px solid #dddddd',
+    borderRadius: '8px',
+    border: '2px solid #e5e7eb',
     fontSize: '16px',
-    transition: 'border-color 0.3s',
+    transition: 'border-color 0.2s',
+    outline: 'none',
   },
   inputError: {
     borderColor: '#ff3b30',
   },
   button: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#10b981',
     color: '#ffffff',
     border: 'none',
-    borderRadius: '4px',
-    padding: '12px 16px',
+    borderRadius: '8px',
+    padding: '12px 24px',
     fontSize: '16px',
-    fontWeight: 'bold' as const,
+    fontWeight: '600' as const,
     cursor: 'pointer',
-    transition: 'background-color 0.3s',
+    transition: 'background-color 0.2s',
     marginTop: '10px',
+    width: '100%',
   },
   errorMessage: {
     backgroundColor: '#ffebee',

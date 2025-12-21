@@ -1,0 +1,48 @@
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .login-right-section .right-content {
+    flex-direction: column !important;
+    gap: 30px !important;
+  }
+  
+  .login-right-section .login-form-section {
+    flex: none !important;
+    width: 100% !important;
+  }
+  
+  .login-right-section .signature-section {
+    padding-left: 0 !important;
+    border-left: none !important;
+    border-top: 1px solid #e5e7eb !important;
+    padding-top: 30px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 30px !important;
+  }
+  
+  .login-left-section {
+    flex: none !important;
+    width: 100% !important;
+    padding-right: 0 !important;
+  }
+  
+  .login-avatar-container {
+    width: 120px !important;
+    height: 120px !important;
+  }
+  
+  .login-right-section {
+    padding-left: 0 !important;
+  }
+  
+  /* 隐藏分隔线 */
+  .login-container > div[style*="divider"] {
+    display: none !important;
+  }
+}
+
