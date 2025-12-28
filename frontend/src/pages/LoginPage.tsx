@@ -44,8 +44,14 @@ const LoginPage: React.FC = () => {
       // 添加调试信息，输出响应数据
       console.log('登录响应数据:', response);
       
-      // 修复：使用正确的字段名 access_token 而不是 token
+      // 保存 access_token
       localStorage.setItem('access_token', response.access_token);
+      
+      // 保存用户信息（重要！用于权限检查）
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+        console.log('用户信息已保存:', response.user);
+      }
       
       // 添加调试信息，确认 token 已保存
       console.log('Token 保存状态:', '已保存');
@@ -155,7 +161,21 @@ const LoginPage: React.FC = () => {
               ))}
               
               {profileConfig.siteInfo.uptime && (
-                <p style={styles.siteInfo}>{profileConfig.siteInfo.uptime}</p>
+                <div style={styles.endBlock}>
+                  <p style={styles.siteInfo}>{profileConfig.siteInfo.uptime}</p>
+                  {profileConfig.siteInfo.beian && (
+                    <p style={styles.beianInfo}>
+                      <a 
+                        href={profileConfig.siteInfo.beian.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={styles.beianLink}
+                      >
+                        {profileConfig.siteInfo.beian.text}
+                      </a>
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -237,8 +257,12 @@ const styles = {
   },
   quoteBlock: {
     marginTop: '16px',
-    padding: '12px 0',
+    paddingTop: '12px',
     borderTop: '1px solid #e5e7eb',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    justifyContent: 'center',
+    minHeight: '80px',
   },
   quoteText: {
     margin: 0,
@@ -253,10 +277,25 @@ const styles = {
     color: '#9ca3af',
     textAlign: 'right' as const,
   },
+  endBlock: {
+    marginTop: '0',
+    paddingTop: '12px',
+    borderTop: '1px solid #e5e7eb',
+  },
   siteInfo: {
-    margin: '16px 0 0 0',
+    margin: 0,
     fontSize: '12px',
     color: '#9ca3af',
+  },
+  beianInfo: {
+    margin: '4px 0 0 0',
+    fontSize: '12px',
+    color: '#9ca3af',
+  },
+  beianLink: {
+    color: '#9ca3af',
+    textDecoration: 'none',
+    transition: 'color 0.2s',
   },
   title: {
     textAlign: 'left' as const,

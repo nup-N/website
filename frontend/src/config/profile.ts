@@ -5,7 +5,6 @@ export const profileConfig = {
     '螃蟹在剥我的壳',
     '笔记本在写我',
     '漫天的我落在枫叶上雪花上',
-    '而你在想我',
   ],
   // 名言/引用
   quotes: [
@@ -17,6 +16,10 @@ export const profileConfig = {
   // 站点信息（可选）
   siteInfo: {
     uptime: 'The end',
+    beian: {
+      text: '鄂ICP备2025166963号',
+      url: 'https://beian.miit.gov.cn/',
+    },
     links: [
       { name: '站点地图', url: '#' },
       { name: '服务探针', url: '#' },

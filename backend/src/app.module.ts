@@ -15,8 +15,8 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     // 配置模块 - 用于加载和访问环境变量
     ConfigModule.forRoot({
-      isGlobal: true, // 设置为全局模块，使所有模块都能访问配置
-      envFilePath: '.env', // 指定环境变量文件路径
+      isGlobal: true,
+      envFilePath: ['.env', '../.env'], // 优先使用当前目录，然后是父目录
     }),
     
     // 数据库连接模块 - 使用异步配置方式

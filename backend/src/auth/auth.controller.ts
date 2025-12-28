@@ -4,7 +4,6 @@ import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
-import { JwtService } from '@nestjs/jwt';
 
 /**
  * 认证控制器
@@ -16,7 +15,6 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService,
   ) {}
 
   /**
@@ -32,24 +30,11 @@ export class AuthController {
     // 创建用户
     const user = await this.usersService.create(createUserDto);
     
-    // 自动登录，生成JWT令牌
-    const payload = {
-      sub: user.id,
+    // 自动登录，复用login逻辑
+    return this.authService.login({
       username: user.username,
-      role: user.role || 'user',
-    };
-    
-    const access_token = this.jwtService.sign(payload);
-    
-    return {
-      access_token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
-    };
+      password: createUserDto.password,
+    });
   }
 
   /**
@@ -66,34 +51,10 @@ export class AuthController {
   }
 
   /**
-   * 验证 Token（通过 Body）
-   * 
-   * 验证 JWT Token 是否有效（供其他系统调用）
-   * 
-   * @param token JWT Token
-   * @returns Token 验证结果和用户信息
-   */
-  @Post('verify')
-  async verifyToken(@Body('token') token: string) {
-    try {
-      const user = await this.authService.verifyToken(token);
-      return {
-        valid: true,
-        user
-      };
-    } catch (error) {
-      return {
-        valid: false,
-        message: error.message
-      };
-    }
-  }
-
-  /**
    * 验证 Token（通过 Authorization Header）
    * 
    * 验证请求头中的 JWT Token 是否有效（供其他系统调用）
-   * 更符合 RESTful 设计，使用标准的 Authorization header
+   * 使用标准的 Authorization header，符合 RESTful 设计
    * 
    * @param req 请求对象（包含 Authorization header）
    * @returns Token 验证结果和用户信息（包含角色）
@@ -117,7 +78,7 @@ export class AuthController {
         user: {
           id: user.sub || user.id,
           username: user.username,
-          role: user.role || 'user' // 返回用户角色
+          role: user.role || 'user'
         }
       };
     } catch (error) {

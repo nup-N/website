@@ -34,8 +34,8 @@ const NavigationPage: React.FC = () => {
   // 系统链接列表
   const systemLinks = [
     {
-      name: 'Nnup の Nacigation',
-      url: 'http://localhost:5174', // navigation系统的前端地址
+      name: 'Nnup の Navigation',
+      url: import.meta.env.VITE_NAVIGATION_URL || 'http://192.168.10.107:5174', // navigation系统的前端地址
     },
     // 后续可以在这里添加更多系统链接
   ];
@@ -101,7 +101,21 @@ const NavigationPage: React.FC = () => {
               ))}
               
               {profileConfig.siteInfo.uptime && (
-                <p style={styles.siteInfo}>{profileConfig.siteInfo.uptime}</p>
+                <div style={styles.endBlock}>
+                  <p style={styles.siteInfo}>{profileConfig.siteInfo.uptime}</p>
+                  {profileConfig.siteInfo.beian && (
+                    <p style={styles.beianInfo}>
+                      <a 
+                        href={profileConfig.siteInfo.beian.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={styles.beianLink}
+                      >
+                        {profileConfig.siteInfo.beian.text}
+                      </a>
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -183,8 +197,12 @@ const styles = {
   },
   quoteBlock: {
     marginTop: '16px',
-    padding: '12px 0',
+    paddingTop: '12px',
     borderTop: '1px solid #e5e7eb',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    justifyContent: 'center',
+    minHeight: '80px',
   },
   quoteText: {
     margin: 0,
@@ -199,10 +217,25 @@ const styles = {
     color: '#9ca3af',
     textAlign: 'right' as const,
   },
+  endBlock: {
+    marginTop: '0',
+    paddingTop: '12px',
+    borderTop: '1px solid #e5e7eb',
+  },
   siteInfo: {
-    margin: '16px 0 0 0',
+    margin: 0,
     fontSize: '12px',
     color: '#9ca3af',
+  },
+  beianInfo: {
+    margin: '4px 0 0 0',
+    fontSize: '12px',
+    color: '#9ca3af',
+  },
+  beianLink: {
+    color: '#9ca3af',
+    textDecoration: 'none',
+    transition: 'color 0.2s',
   },
   header: {
     display: 'flex',

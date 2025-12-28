@@ -41,6 +41,9 @@ services:
       else
         redis-server --appendonly yes
       fi
+      "
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]

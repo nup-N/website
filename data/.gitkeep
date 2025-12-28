@@ -1,0 +1,8 @@
+# 此目录用于存放 Docker 容器的持久化数据
+# 
+# 目录结构：
+# - postgres/ - PostgreSQL 数据文件
+# - redis/ - Redis 数据文件
+# 
+# 注意：此目录下的所有内容（除了.gitkeep）都会被 .gitignore 忽略
+

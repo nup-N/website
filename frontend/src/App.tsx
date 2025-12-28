@@ -69,6 +69,35 @@ function App() {
     return <>{children}</>;
   };
 
+  // 超级管理员路由组件
+  const SuperAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    if (isChecking) {
+      return <div>加载中...</div>;
+    }
+    if (!isAuthenticated) {
+      return <Navigate to="/" replace />;
+    }
+    
+    // 检查用户角色
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      return <Navigate to="/navigation" replace />;
+    }
+    
+    try {
+      const user = JSON.parse(userStr);
+      if (user.role !== 'super_admin') {
+        alert('权限不足：只有超级管理员可以访问用户管理页面');
+        return <Navigate to="/navigation" replace />;
+      }
+    } catch (error) {
+      console.error('解析用户信息失败:', error);
+      return <Navigate to="/navigation" replace />;
+    }
+    
+    return <>{children}</>;
+  };
+
   return (
     <BrowserRouter>
       <Routes>
@@ -122,13 +151,13 @@ function App() {
           } 
         />
         
-        {/* 用户管理路由（保留用于管理） */}
+        {/* 用户管理路由（仅超级管理员可访问） */}
         <Route 
           path="/users" 
           element={
-            <ProtectedRoute>
+            <SuperAdminRoute>
               <UsersPage />
-            </ProtectedRoute>
+            </SuperAdminRoute>
           } 
         />
         

@@ -31,11 +31,6 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
   
   const nodeEnv = configService.get('NODE_ENV', 'development');
-  console.log(`🚀 统一认证服务运行在: http://0.0.0.0:${port}`);
-  console.log(`📋 环境: ${nodeEnv}`);
-  
-  if (nodeEnv === 'production') {
-    console.log('⚠️  生产环境模式 - 请确保已配置强密码和密钥！');
-  }
+  console.log(`🚀 统一认证服务运行在: http://0.0.0.0:${port} [${nodeEnv}]`);
 }
 bootstrap();
