@@ -1,39 +1,39 @@
-﻿import { NestFactory } from '@nestjs/core';
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  
-  // 启用 CORS
+
   const corsOrigin = configService.get('CORS_ORIGIN');
-  if (!corsOrigin) {
-    console.error('CORS_ORIGIN 未配置，拒绝所有跨域请求');
-  }
+  const origins = corsOrigin
+    ? corsOrigin.split(',').map((o) => o.trim()).filter((o) => {
+        if (!o.startsWith('http://') && !o.startsWith('https://')) {
+          console.warn(`[CORS] 忽略无效 origin: ${o}`);
+          return false;
+        }
+        return true;
+      })
+    : [];
+
   app.enableCors({
-    origin: corsOrigin
-      ? corsOrigin.split(',').map(origin => origin.trim())
-      : false,
+    origin: origins.length > 0 ? origins : false,
     credentials: true,
   });
-  
-  // 全局路由前缀
-  app.setGlobalPrefix('api');
 
-  // 全局验证管道
+  app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // 自动过滤未定义的属性
-    forbidNonWhitelisted: true, // 禁止未定义的属性
-    transform: true, // 自动转换类型
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
   }));
-  
-  // 从环境变量读取端口
+
   const port = configService.get('PORT', 3000);
   await app.listen(port, '0.0.0.0');
-  
+
   const nodeEnv = configService.get('NODE_ENV', 'development');
-  console.log(`🚀 统一认证服务运行在: http://0.0.0.0:${port} [${nodeEnv}]`);
+  console.log(`\u{1F680} Auth Service running at http://0.0.0.0:${port} [${nodeEnv}]`);
 }
 bootstrap();

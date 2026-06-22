@@ -1,9 +1,6 @@
 version: '3.8'
 
-# 服务定义
-# 注意：敏感信息（如密码）应通过 .env 文件配置，不要硬编码
 services:
-  # PostgreSQL 15 数据库服务
   postgres_auth:
     container_name: postgres_auth
     image: postgres:15
@@ -26,7 +23,6 @@ services:
     networks:
       - app_network
 
-  # Redis 7 缓存服务
   redis_auth:
     container_name: redis_auth
     image: redis:7
@@ -54,7 +50,35 @@ services:
     networks:
       - app_network
 
-# 网络配置
+  backend:
+    container_name: auth_backend
+    build:
+      context: ./backend
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - DB_HOST=postgres_auth
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME:-admin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE:-auth_system}
+      - REDIS_HOST=redis_auth
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+    depends_on:
+      postgres_auth:
+        condition: service_healthy
+      redis_auth:
+        condition: service_healthy
+    restart: always
+    networks:
+      - app_network
+
 networks:
   app_network:
     driver: bridge

@@ -118,3 +118,6 @@ coverage/
 *.tar
 *.tar.gz
 *.rar
+
+# Local test data (SQLite)
+backend/data/

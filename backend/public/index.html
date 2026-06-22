@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>统一认证 - 管理</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+  .login-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+  .login-card { background: #fff; border-radius: 12px; padding: 40px; width: 380px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .login-card h1 { text-align: center; font-size: 24px; margin-bottom: 8px; }
+  .login-card p { text-align: center; color: #888; font-size: 14px; margin-bottom: 28px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
+  .form-group input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+  .form-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); }
+  .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: .2s; }
+  .btn-primary { background: #3b82f6; color: #fff; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; }
+  .error-msg { background: #fef2f2; color: #dc2626; padding: 10px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; text-align: center; }
+  .admin-page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .admin-header h1 { font-size: 22px; }
+  .admin-header .user-info { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #666; }
+  .admin-header .user-info .role-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; color: #fff; font-size: 11px; font-weight: 600; background: #3b82f6; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  th { background: #f9fafb; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid #e5e7eb; }
+  td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #f3f4f6; }
+  tr:hover td { background: #fafbfc; }
+  .role-tag { display: inline-block; padding: 2px 10px; border-radius: 10px; color: #fff; font-size: 12px; font-weight: 600; }
+  select { padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; outline: none; background: #fff; cursor: pointer; }
+  select:focus { border-color: #3b82f6; }
+  .loading { text-align: center; padding: 60px; color: #999; font-size: 15px; }
+  .footer { margin-top: 20px; text-align: center; font-size: 12px; color: #aaa; }
+  .self-tag { margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: #e0f2fe; color: #0284c7; font-size: 11px; }
+  @media (max-width: 768px) { .admin-header { flex-direction: column; align-items: flex-start; gap: 12px; } .admin-header .user-info { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const API = '/api';
+const roleColors = { guest: '#607d8b', user: '#2196f3', premium: '#9c27b0', admin: '#ff9800', super_admin: '#f44336' };
+const roleLabels = { guest: '访客', user: '用户', premium: '高级用户', admin: '管理员', super_admin: '超级管理员' };
+
+function getToken() { return localStorage.getItem('access_token'); }
+function getUser() { const u = localStorage.getItem('user'); return u ? JSON.parse(u) : null; }
+
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = getToken();
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, { ...opts, headers: { ...headers, ...opts.headers } });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || '请求失败');
+  return data;
+}
+
+function LoginForm() {
+  const [form, setForm] = React.useState({ username: '', password: '' });
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+  const onSubmit = async (e) => {
+    e.preventDefault(); setLoading(true); setError(null);
+    try {
+      const data = await api('/auth/login', { method: 'POST', body: JSON.stringify(form) });
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      renderApp();
+    } catch (err) { setError(err.message); } finally { setLoading(false); }
+  };
+  return React.createElement('div', { className: 'login-page' },
+    React.createElement('div', { className: 'login-card' },
+      React.createElement('h1', null, '统一认证'),
+      React.createElement('p', null, '管理员登录'),
+      error && React.createElement('div', { className: 'error-msg' }, error),
+      React.createElement('form', { onSubmit },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', { htmlFor: 'u' }, '用户名'),
+          React.createElement('input', { id: 'u', type: 'text', value: form.username, onChange: e => setForm({...form, username: e.target.value}), placeholder: '请输入用户名', required: true })),
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', { htmlFor: 'p' }, '密码'),
+          React.createElement('input', { id: 'p', type: 'password', value: form.password, onChange: e => setForm({...form, password: e.target.value}), placeholder: '请输入密码', required: true })),
+        React.createElement('button', { type: 'submit', className: 'btn btn-primary', disabled: loading }, loading ? '登录中...' : '登录')
+      )
+    )
+  );
+}
+
+function AdminPanel() {
+  const [users, setUsers] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [updating, setUpdating] = React.useState(null);
+  const user = getUser();
+
+  React.useEffect(() => { api('/users').then(setUsers).catch(e => setError(e.message)).finally(() => setLoading(false)); }, []);
+
+  const changeRole = async (uid, role) => {
+    if (user && user.id === uid) { alert('不能修改自己的角色'); return; }
+    if (!confirm('确定将角色改为 "' + roleLabels[role] + '" ？')) return;
+    setUpdating(uid);
+    try {
+      const updated = await api('/users/' + uid, { method: 'PATCH', body: JSON.stringify({ role }) });
+      setUsers(users.map(u => u.id === uid ? updated : u));
+    } catch (err) { alert('失败: ' + err.message); } finally { setUpdating(null); }
+  };
+
+  const logout = async () => {
+    try { await api('/auth/logout', { method: 'POST' }); } catch {}
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    renderApp();
+  };
+
+  return React.createElement('div', { className: 'admin-page' },
+    React.createElement('div', { className: 'admin-header' },
+      React.createElement('h1', null, '用户管理'),
+      React.createElement('div', { className: 'user-info' },
+        React.createElement('span', null, user ? user.username : ''),
+        React.createElement('span', { className: 'role-badge', style: { backgroundColor: roleColors[user?.role] || '#3b82f6' } }, roleLabels[user?.role] || user?.role),
+        React.createElement('button', { className: 'btn btn-danger btn-sm', onClick: logout }, '退出登录'))),
+    error && React.createElement('div', { className: 'error-msg' }, error),
+    loading ? React.createElement('div', { className: 'loading' }, '加载中...')
+    : React.createElement(React.Fragment, null,
+      React.createElement('table', null,
+        React.createElement('thead', null,
+          React.createElement('tr', null,
+            React.createElement('th', null, 'ID'),
+            React.createElement('th', null, '用户名'),
+            React.createElement('th', null, '邮箱'),
+            React.createElement('th', null, '角色'),
+            React.createElement('th', null, '创建时间'),
+            React.createElement('th', null, '操作'))),
+        React.createElement('tbody', null,
+          users.length === 0 ? React.createElement('tr', null, React.createElement('td', { colSpan: 6, style: { textAlign: 'center', padding: '40px', color: '#999' } }, '暂无用户数据'))
+          : users.map(u => React.createElement('tr', { key: u.id, style: updating === u.id ? { opacity: .5 } : {} },
+            React.createElement('td', null, u.id),
+            React.createElement('td', null, u.username, user && u.id === user.id ? React.createElement('span', { className: 'self-tag' }, '当前用户') : null),
+            React.createElement('td', null, u.email),
+            React.createElement('td', null, React.createElement('span', { className: 'role-tag', style: { backgroundColor: roleColors[u.role] || '#3b82f6' } }, roleLabels[u.role] || u.role)),
+            React.createElement('td', null, new Date(u.createdAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })),
+            React.createElement('td', null, user && u.id === user.id
+              ? React.createElement('span', { style: { color: '#999', fontSize: '13px' } }, '不可修改')
+              : React.createElement('select', { value: u.role, onChange: e => changeRole(u.id, e.target.value), disabled: updating === u.id },
+                  Object.entries(roleLabels).map(([v, l]) => React.createElement('option', { key: v, value: v }, l)))))))),
+      React.createElement('div', { className: 'footer' }, '共 ' + users.length + ' 个用户 | 仅超级管理员可修改角色'))
+  );
+}
+
+function App() { return getToken() ? React.createElement(AdminPanel) : React.createElement(LoginForm); }
+function renderApp() { ReactDOM.createRoot(document.getElementById('app')).render(React.createElement(App)); }
+renderApp();
+</script>
+</body>
+</html>

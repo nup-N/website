@@ -10,13 +10,14 @@ describe('AppController', () => {
       controllers: [AppController],
       providers: [AppService],
     }).compile();
-
     appController = app.get<AppController>(AppController);
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return API info', () => {
+      const info = appController.getInfo();
+      expect(info).toHaveProperty('name');
+      expect(info).toHaveProperty('version');
     });
   });
 });

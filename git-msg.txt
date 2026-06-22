@@ -1,0 +1,17 @@
+Refactor: optimize project, add admin page, Docker support, local SQLite mode
+
+- Remove frontend (was only for management usage)
+
+- Add Redis token blacklist for proper logout
+
+- Add rate limiting on login via @nestjs/throttler
+
+- Add admin page at /admin (single-file React 18)
+
+- Add SQLite local mode for development without Docker
+
+- Add Docker multi-stage build and compose backend service
+
+- Switch entity enum to simple-enum for cross-DB compatibility
+
+- Clean up docs, deps, and unused code

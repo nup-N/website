@@ -1,68 +1,75 @@
+import { join } from 'path';
 import { Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { RedisModule } from './redis/redis.module';
 import { AllExceptionsFilter } from './common/exception.filter';
+import { User } from './users/entities/user.entity';
 
-/**
- * 应用程序主模块
- * 
- * 负责整合所有功能模块，配置全局服务和数据库连接
- */
 @Module({
   imports: [
-    // 配置模块 - 用于加载和访问环境变量
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/admin',
+      exclude: ['/api/(.*)'],
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '../.env'], // 优先使用当前目录，然后是父目录
+      envFilePath: ['.env', '../.env'],
     }),
-    
-    // 数据库连接模块 - 使用异步配置方式
-    TypeOrmModule.forRootAsync({
-      // 注入 ConfigService 以读取环境变量
+    ThrottlerModule.forRootAsync({
       inject: [ConfigService],
-      // 使用工厂函数根据环境变量创建数据库配置
-      useFactory: (configService: ConfigService) => ({
-        // 数据库类型
-        type: 'postgres',
-        
-        // 从环境变量读取数据库连接参数
-        host: configService.get('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE'),
-        
-        // 自动同步实体到数据库表结构（开发环境使用，生产环境应关闭）
-        synchronize: configService.get('NODE_ENV') === 'development',
-        
-        // 自动加载实体类，无需手动指定实体数组
-        autoLoadEntities: true,
-        
-        // 是否显示SQL日志
-        logging: configService.get('NODE_ENV') === 'development',
+      useFactory: (config: ConfigService) => ({
+        throttlers: [{
+          ttl: 60000,
+          limit: config.get('NODE_ENV') === 'production' ? 30 : 60,
+        }],
       }),
     }),
-    
-    // 用户模块 - 提供用户管理功能
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        if (process.env.DB_DRIVER === 'sqlite') {
+          return {
+            type: 'sqljs' as any,
+            location: 'data/local.db',
+            autoSave: true,
+            entities: [User],
+            synchronize: true,
+            logging: configService.get('NODE_ENV') === 'development',
+          };
+        }
+        return {
+          type: 'postgres',
+          host: configService.get('DB_HOST'),
+          port: configService.get<number>('DB_PORT'),
+          username: configService.get('DB_USERNAME'),
+          password: configService.get('DB_PASSWORD'),
+          database: configService.get('DB_DATABASE'),
+          synchronize: configService.get('NODE_ENV') === 'development',
+          autoLoadEntities: true,
+          migrations: ['dist/migrations/*.js'],
+          migrationsRun: false,
+          logging: configService.get('NODE_ENV') === 'development',
+        };
+      },
+    }),
     UsersModule,
-    
-    // 认证模块 - 提供用户认证和授权功能
     AuthModule,
+    RedisModule,
   ],
-  // 保留原有的控制器
   controllers: [AppController],
-  // 保留原有的服务提供者
   providers: [
     AppService,
-    {
-      provide: APP_FILTER,
-      useClass: AllExceptionsFilter,
-    },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
   ],
 })
 export class AppModule {}
