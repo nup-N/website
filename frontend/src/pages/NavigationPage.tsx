@@ -1,13 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileConfig } from '../config/profile';
+import { authAPI } from '../services/api';
 import './NavigationPage.css';
 import './LoginPage.css';
 
 const NavigationPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } catch {
+      // 即使接口失败也继续清除本地状态
+    }
     localStorage.removeItem('access_token');
     localStorage.removeItem('token');
     localStorage.removeItem('auth_token');

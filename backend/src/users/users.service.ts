@@ -105,10 +105,16 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     // 先检查用户是否存在
     await this.findOne(id);
-    
+
+    // 如果更新了密码，需要加密
+    if (updateUserDto.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
+    }
+
     // 更新用户信息
     await this.userRepository.update(id, updateUserDto);
-    
+
     // 返回更新后的用户信息
     return this.findOne(id);
   }

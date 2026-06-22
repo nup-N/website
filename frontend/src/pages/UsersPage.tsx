@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { usersAPI } from '../services/api';
+import { usersAPI, authAPI } from '../services/api';
 import type { User } from '../types';
 
 const ROLES = [
@@ -119,7 +119,8 @@ const UsersPage: React.FC = () => {
   };
 
   // 处理退出登录
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await authAPI.logout(); } catch {}
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     navigate('/login');

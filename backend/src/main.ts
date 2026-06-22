@@ -9,10 +9,13 @@ async function bootstrap() {
   
   // 启用 CORS
   const corsOrigin = configService.get('CORS_ORIGIN');
+  if (!corsOrigin) {
+    console.error('CORS_ORIGIN 未配置，拒绝所有跨域请求');
+  }
   app.enableCors({
-    origin: corsOrigin 
+    origin: corsOrigin
       ? corsOrigin.split(',').map(origin => origin.trim())
-      : true, // 开发环境允许所有来源，生产环境应配置具体域名
+      : false,
     credentials: true,
   });
   

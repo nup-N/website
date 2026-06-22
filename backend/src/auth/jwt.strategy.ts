@@ -27,8 +27,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ignoreExpiration: false,
       
       // 从环境变量获取JWT密钥
-      // 警告：实际生产环境必须设置JWT_SECRET环境变量，默认值仅用于开发
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'default-secret-key',
+      secretOrKey: configService.get<string>('JWT_SECRET'),
     });
   }
 

@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { AllExceptionsFilter } from './common/exception.filter';
 
 /**
  * 应用程序主模块
@@ -55,6 +57,12 @@ import { AuthModule } from './auth/auth.module';
   // 保留原有的控制器
   controllers: [AppController],
   // 保留原有的服务提供者
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
 export class AppModule {}

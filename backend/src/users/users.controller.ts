@@ -3,40 +3,30 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../common/roles.guard';
+import { Roles } from '../common/roles.decorator';
 
 /**
  * 用户控制器
- * 
- * 提供用户相关的API端点，包括用户注册、查询、更新和删除等
- * 除了注册接口外，其他所有接口都需要JWT认证
+ *
+ * 提供用户管理API端点，包括创建、查询、更新和删除等
+ * 所有接口都需要JWT认证和适当角色权限
  */
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   /**
-   * 用户注册（公开接口）
-   * 
-   * 创建新用户账号，此接口无需认证，任何人都可以访问
-   * 
-   * @param createUserDto 用户注册数据
-   * @returns 创建的用户信息（不含密码）
-   */
-  @Post('register')
-  async register(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
-  /**
    * 创建用户（管理员功能）
-   * 
+   *
    * 创建新用户账号，需要JWT认证
    * 
    * @param createUserDto 用户创建数据
    * @returns 创建的用户信息（不含密码）
    */
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
   async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -49,7 +39,8 @@ export class UsersController {
    * @returns 用户列表
    */
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
   async findAll() {
     return this.usersService.findAll();
   }
@@ -63,7 +54,8 @@ export class UsersController {
    * @returns 用户信息
    */
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
   async findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
@@ -78,7 +70,8 @@ export class UsersController {
    * @returns 更新后的用户信息
    */
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'super_admin')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
@@ -92,7 +85,8 @@ export class UsersController {
    * @returns 操作结果
    */
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('super_admin')
   async remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
