@@ -121,3 +121,5 @@ coverage/
 
 # Local test data (SQLite)
 backend/data/
+
+git-msg.txt

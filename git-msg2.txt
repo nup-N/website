@@ -1,0 +1,11 @@
+Frontend-backend separation: add standalone React admin frontend
+
+- Remove @nestjs/serve-static, backend no longer serves static files
+
+- Add frontend/ with Vite + React + TypeScript + admin login + user management
+
+- Add frontend Dockerfile (Nginx), nginx.conf with /api proxy to backend
+
+- Add frontend service to docker-compose.yml for one-click deployment
+
+- Update CORS config for frontend-backend architecture

@@ -1,4 +1,4 @@
-﻿# ==================== Build stage ====================
+# ==================== Build stage ====================
 FROM node:20-alpine AS builder
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
@@ -14,6 +14,5 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
-COPY public ./public
 EXPOSE 3000
 CMD ["node", "dist/main.js"]

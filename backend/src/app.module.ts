@@ -15,15 +15,6 @@ import { User } from './users/entities/user.entity';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      serveRoot: '/admin',
-      exclude: ['/api/(.*)'],
-    }),
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ['.env', '../.env'],
-    }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
