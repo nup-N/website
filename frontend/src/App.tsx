@@ -63,8 +63,29 @@ function AdminPanel() {
 
   useEffect(() => { api("/users").then(setUsers).catch(e => setError(e.message)).finally(() => setLoading(false)); }, []);
 
+  const canEditRoleOf = (target: User) => {
+    if (!user) return false;
+    if (user.id === target.id) return false;
+    if (user.role === "super_admin") return true;
+    if (user.role === "admin") return target.role !== "admin" && target.role !== "super_admin";
+    return false;
+  };
+
+  const roleOptionsFor = (target: User) => {
+    if (!user) return [];
+    if (user.role === "super_admin") return Object.keys(ROLE_LABELS);
+    if (user.role === "admin") return canEditRoleOf(target) ? ["guest", "user", "premium"] : [];
+    return [];
+  };
+
   const changeRole = async (uid: number, role: string) => {
     if (user && user.id === uid) { alert("不能修改自己的角色"); return; }
+    if (user?.role === "admin") {
+      const target = users.find(u => u.id === uid);
+      if (!target) { alert("用户不存在"); return; }
+      if (target.role === "admin" || target.role === "super_admin") { alert("不能调整管理员及以上角色用户"); return; }
+      if (role !== "guest" && role !== "user" && role !== "premium") { alert("管理员只能将角色设置为访客/用户/高级用户"); return; }
+    }
     if (!confirm('确定将角色改为 "' + ROLE_LABELS[role] + '" ？')) return;
     setUpdating(uid);
     try {
@@ -109,16 +130,16 @@ function AdminPanel() {
                   <td>{u.email}</td>
                   <td><span className="role-tag" style={{ backgroundColor: ROLE_COLORS[u.role] || "#3b82f6" }}>{ROLE_LABELS[u.role] || u.role}</span></td>
                   <td>{new Date(u.createdAt).toLocaleString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</td>
-                  <td>{user && u.id === user.id ? <span style={{ color: "#999", fontSize: "13px" }}>不可修改</span> : (
+                  <td>{canEditRoleOf(u) ? (
                     <select value={u.role} onChange={e => changeRole(u.id, e.target.value)} disabled={updating === u.id}>
-                      {Object.entries(ROLE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      {roleOptionsFor(u).map(v => <option key={v} value={v}>{ROLE_LABELS[v] || v}</option>)}
                     </select>
-                  )}</td>
+                  ) : <span style={{ color: "#999", fontSize: "13px" }}>不可修改</span>}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <div className="footer">共 {users.length} 个用户 | 仅超级管理员可修改角色</div>
+          <div className="footer">共 {users.length} 个用户 | 管理员仅可设置为访客/用户/高级用户；超级管理员可设置全部角色</div>
         </>
       )}
     </div>

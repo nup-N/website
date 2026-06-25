@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -14,6 +14,15 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  private canAdminChangeTargetRole(currentTargetRole: User['role'], nextRole: User['role']) {
+    if (currentTargetRole === 'admin' || currentTargetRole === 'super_admin') {
+      throw new ForbiddenException('不能调整管理员及以上角色用户');
+    }
+    if (nextRole !== 'guest' && nextRole !== 'user' && nextRole !== 'premium') {
+      throw new ForbiddenException('管理员只能将角色设置为 guest/user/premium');
+    }
+  }
 
   async create(createUserDto: CreateUserDto): Promise<SafeUser> {
     const existingUsername = await this.userRepository.findOne({ where: { username: createUserDto.username } });
@@ -50,8 +59,23 @@ export class UsersService {
       .getOne();
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<SafeUser> {
-    await this.findOne(id);
+  async update(id: number, updateUserDto: UpdateUserDto, actor?: { userId?: number; role?: string }): Promise<SafeUser> {
+    const targetUser = await this.userRepository.findOne({ where: { id } });
+    if (!targetUser) throw new NotFoundException(`ID 为 ${id} 的用户不存在`);
+
+    if (updateUserDto.role) {
+      if (actor?.userId === id) {
+        throw new ForbiddenException('不能修改自己的角色');
+      }
+
+      const actorRole = actor?.role;
+      if (actorRole === 'admin') {
+        this.canAdminChangeTargetRole(targetUser.role, updateUserDto.role);
+      } else if (actorRole !== 'super_admin') {
+        throw new ForbiddenException('权限不足');
+      }
+    }
+
     if (updateUserDto.password) {
       const salt = await bcrypt.genSalt(10);
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
