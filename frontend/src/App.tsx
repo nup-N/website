@@ -4,20 +4,18 @@ const API = "/api";
 const ROLE_COLORS: Record<string, string> = { guest: "#607d8b", user: "#2196f3", premium: "#9c27b0", admin: "#ff9800", super_admin: "#f44336" };
 const ROLE_LABELS: Record<string, string> = { guest: "访客", user: "用户", premium: "高级用户", admin: "管理员", super_admin: "超级管理员" };
 
-function getToken() { return localStorage.getItem("access_token"); }
-function getUser() { try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; } }
-
 async function api(path: string, opts?: RequestInit) {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const token = getToken();
-  if (token) headers["Authorization"] = "Bearer " + token;
-  const res = await fetch(API + path, { ...opts, headers: { ...headers, ...(opts?.headers as Record<string, string>) } });
+  const res = await fetch(API + path, { ...opts, credentials: "include", headers: { ...headers, ...(opts?.headers as Record<string, string>) } });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "请求失败");
   return data;
 }
 
-function LoginForm({ onLogin }: { onLogin: () => void }) {
+interface CurrentUser { id: number; username: string; role: string; }
+interface User { id: number; username: string; email: string; role: string; createdAt: string; }
+
+function LoginForm({ onLogin }: { onLogin: (user: CurrentUser) => void }) {
   const [username, setUser] = useState("");
   const [password, setPass] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,9 +24,7 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
     e.preventDefault(); setLoading(true); setError(null);
     try {
       const data = await api("/auth/login", { method: "POST", body: JSON.stringify({ username, password }) });
-      localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      onLogin();
+      onLogin(data.user);
     } catch (err: any) { setError(err.message); } finally { setLoading(false); }
   };
   return (
@@ -52,19 +48,15 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-interface User { id: number; username: string; email: string; role: string; createdAt: string; }
-
-function AdminPanel() {
+function AdminPanel({ user, onLogout }: { user: CurrentUser; onLogout: () => void }) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<number | null>(null);
-  const user = getUser();
 
   useEffect(() => { api("/users").then(setUsers).catch(e => setError(e.message)).finally(() => setLoading(false)); }, []);
 
   const canEditRoleOf = (target: User) => {
-    if (!user) return false;
     if (user.id === target.id) return false;
     if (user.role === "super_admin") return true;
     if (user.role === "admin") return target.role !== "admin" && target.role !== "super_admin";
@@ -72,14 +64,13 @@ function AdminPanel() {
   };
 
   const roleOptionsFor = (target: User) => {
-    if (!user) return [];
     if (user.role === "super_admin") return Object.keys(ROLE_LABELS);
     if (user.role === "admin") return canEditRoleOf(target) ? ["guest", "user", "premium"] : [];
     return [];
   };
 
   const changeRole = async (uid: number, role: string) => {
-    if (user && user.id === uid) { alert("不能修改自己的角色"); return; }
+    if (user.id === uid) { alert("不能修改自己的角色"); return; }
     if (user?.role === "admin") {
       const target = users.find(u => u.id === uid);
       if (!target) { alert("用户不存在"); return; }
@@ -96,9 +87,7 @@ function AdminPanel() {
 
   const logout = async () => {
     try { await api("/auth/logout", { method: "POST" }); } catch {}
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
-    window.location.reload();
+    onLogout();
   };
 
   return (
@@ -147,5 +136,16 @@ function AdminPanel() {
 }
 
 export default function App() {
-  return getToken() ? <AdminPanel /> : <LoginForm onLogin={() => window.location.reload()} />;
+  const [user, setUser] = useState<CurrentUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api("/auth/profile")
+      .then(setUser)
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="loading">加载中...</div>;
+  return user ? <AdminPanel user={user} onLogout={() => setUser(null)} /> : <LoginForm onLogin={(u) => setUser(u)} />;
 }
